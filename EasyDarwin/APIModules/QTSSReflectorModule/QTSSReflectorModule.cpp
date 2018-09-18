@@ -666,7 +666,7 @@ int RtptoH264(char *bufIn, int len)
 	int fwrite_number = 0;               //存入文件的数据长度
 
 	memcpy(recvbuf, bufIn, len);          //复制rtp包 
-	qtss_printf("包长度+ rtp头：   = %d\n", len);
+	qtss_printf("packLen+ rtpHead：   = %d\n", len);
 
 	//////////////////////////////////////////////////////////////////////////
 	//begin rtp_payload and rtp_header
@@ -683,26 +683,21 @@ int RtptoH264(char *bufIn, int len)
 		qtss_printf("RTPpacket_t payload MMEMORY ERROR\n");
 	}
 
-	if ((rtp_hdr = (RTP_HEADER *)malloc(sizeof(RTP_HEADER))) == NULL)
-	{
-		qtss_printf("RTP_HEADER MEMORY ERROR\n");
-	}
-
 	rtp_hdr = (RTP_HEADER*)&recvbuf[0];
-	qtss_printf("版本号 : %d\n", rtp_hdr->version);
+	qtss_printf("version : %d\n", rtp_hdr->version);
 	p->v = rtp_hdr->version;
 	p->p = rtp_hdr->padding;
 	p->x = rtp_hdr->extension;
 	p->cc = rtp_hdr->csrc_len;
-	qtss_printf("标志位 : %d\n", rtp_hdr->marker);
+	qtss_printf("flagBit : %d\n", rtp_hdr->marker);
 	p->m = rtp_hdr->marker;
-	qtss_printf("负载类型:%d\n", rtp_hdr->payloadtype);
+	qtss_printf("loadType:%d\n", rtp_hdr->payloadtype);
 	p->pt = rtp_hdr->payloadtype;
-	qtss_printf("包号   : %d \n", ntohl(rtp_hdr->seq_no));
+	qtss_printf("packageNum: %d \n", ntohl(rtp_hdr->seq_no));
 	p->seq = rtp_hdr->seq_no;
-	qtss_printf("时间戳 : %d\n", rtp_hdr->timestamp);
+	qtss_printf("timestamp : %d\n", rtp_hdr->timestamp);
 	p->timestamp = rtp_hdr->timestamp;
-	qtss_printf("帧号   : %d\n", rtp_hdr->ssrc);
+	qtss_printf("frameNum: %d\n", rtp_hdr->ssrc);
 	p->ssrc = rtp_hdr->ssrc;
 
 	//end rtp_payload and rtp_header
@@ -713,11 +708,6 @@ int RtptoH264(char *bufIn, int len)
 		qtss_printf("NALU_t MMEMORY ERROR\n");
 	}
 
-	if ((nalu_hdr = (NALU_HEADER *)malloc(sizeof(NALU_HEADER))) == NULL)
-	{
-		qtss_printf("NALU_HEADER MEMORY ERROR\n");
-	}
-
 	nalu_hdr = (NALU_HEADER*)&recvbuf[12];                        //网络传输过来的字节序 ，当存入内存还是和文档描述的相反，只要匹配网络字节序和文档描述即可传输正确。
 	qtss_printf("forbidden_zero_bit: %d\n", nalu_hdr->F);              //网络传输中的方式为：F->NRI->TYPE.. 内存中存储方式为 TYPE->NRI->F (和nal头匹配)。
 
@@ -725,7 +715,7 @@ int RtptoH264(char *bufIn, int len)
 	qtss_printf("nal_reference_idc:  %d\n", nalu_hdr->NRI);
 
 	n->nal_reference_idc = nalu_hdr->NRI << 5;
-	qtss_printf("nal 负载类型:       %d\n", nalu_hdr->TYPE);
+	qtss_printf("nal loadType:       %d\n", nalu_hdr->TYPE);
 	n->nal_unit_type = nalu_hdr->TYPE;
 
 	//end nal_hdr
@@ -737,7 +727,7 @@ int RtptoH264(char *bufIn, int len)
 	}
 	else if (nalu_hdr->TYPE >0 && nalu_hdr->TYPE < 24)  //单包
 	{
-		qtss_printf("当前包为单包\n");
+		qtss_printf("this is signle package\n");
 		putc(0x00, poutfile);
 		putc(0x00, poutfile);
 		putc(0x00, poutfile);
@@ -749,35 +739,26 @@ int RtptoH264(char *bufIn, int len)
 		total_bytes += 1;
 		fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
 		total_bytes = p->paylen;
-		qtss_printf("包长度 + nal= %d\n", total_bytes);
+		qtss_printf("packageLen + nal= %d\n", total_bytes);
 	}
 	else if (nalu_hdr->TYPE == 24)      //STAP-A   单一时间的组合包
 	{
-		qtss_printf("当前包为STAP-A\n");
+		qtss_printf("this is STAP-A\n");
 	}
 	else if (nalu_hdr->TYPE == 25)     //STAP-B   单一时间的组合包
 	{
-		qtss_printf("当前包为STAP-B\n");
+		qtss_printf("this is STAP-B\n");
 	}
 	else if (nalu_hdr->TYPE == 26)        //MTAP16   多个时间的组合包
 	{
-		qtss_printf("当前包为MTAP16\n");
+		qtss_printf("this is MTAP16\n");
 	}
 	else if (nalu_hdr->TYPE == 27)       //MTAP24   多个时间的组合包
 	{
-		qtss_printf("当前包为MTAP24\n");
+		qtss_printf("this is MTAP24\n");
 	}
 	else if (nalu_hdr->TYPE == 28)       //FU-A分片包，解码顺序和传输顺序相同
 	{
-		if ((fu_ind = (FU_INDICATOR *)malloc(sizeof(FU_INDICATOR))) == NULL)
-		{
-			qtss_printf("FU_INDICATOR MEMORY ERROR\n");
-		}
-		if ((fu_hdr = (FU_HEADER *)malloc(sizeof(FU_HEADER))) == NULL)
-		{
-			qtss_printf("FU_HEADER MEMORY ERROR\n");
-		}
-
 		fu_ind = (FU_INDICATOR*)&recvbuf[12];
 		qtss_printf("FU_INDICATOR->F     :%d\n", fu_ind->F);
 		n->forbidden_bit = fu_ind->F << 7;
@@ -795,12 +776,12 @@ int RtptoH264(char *bufIn, int len)
 
 		if (rtp_hdr->marker == 1)                      //分片包最后一个包
 		{
-			qtss_printf("当前包为FU-A分片包最后一个包\n");
+			qtss_printf("this is FU-A last package\n");
 			memcpy(p->payload, &recvbuf[14], len - 14);
 			p->paylen = len - 14;
 			fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
 			total_bytes = p->paylen;
-			qtss_printf("包长度 + FU = %d\n", total_bytes);
+			qtss_printf("packageLen + FU = %d\n", total_bytes);
 		}
 		else if (rtp_hdr->marker == 0)                 //分片包 但不是最后一个包
 		{
@@ -810,7 +791,7 @@ int RtptoH264(char *bufIn, int len)
 				unsigned char NRI;
 				unsigned char TYPE;
 				unsigned char nh;
-				qtss_printf("当前包为FU-A分片包第一个包\n");
+				qtss_printf("this is FU-A first package\n");
 				putc(0x00, poutfile);
 				putc(0x00, poutfile);
 				putc(0x00, poutfile);
@@ -830,16 +811,16 @@ int RtptoH264(char *bufIn, int len)
 				p->paylen = len - 14;
 				fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
 				total_bytes = p->paylen;
-				qtss_printf("包长度 + FU_First = %d\n", total_bytes);
+				qtss_printf("packageLen + FU_First = %d\n", total_bytes);
 			}
 			else                                      //如果不是第一个包
 			{
-				qtss_printf("当前包为FU-A分片包\n");
+				qtss_printf("this is FU-A package\n");
 				memcpy(p->payload, &recvbuf[14], len - 14);
 				p->paylen = len - 14;
 				fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
 				total_bytes = p->paylen;
-				qtss_printf("包长度 + FU = %d\n", total_bytes);
+				qtss_printf("packageLen + FU = %d\n", total_bytes);
 			}
 		}
 	}
@@ -847,12 +828,12 @@ int RtptoH264(char *bufIn, int len)
 	{
 		if (rtp_hdr->marker == 1)                  //分片包最后一个包
 		{
-			qtss_printf("当前包为FU-B分片包最后一个包\n");
+			qtss_printf("this is FU-B last package\n");
 
 		}
 		else if (rtp_hdr->marker == 0)             //分片包 但不是最后一个包
 		{
-			qtss_printf("当前包为FU-B分片包\n");
+			qtss_printf("this is FU-B package\n");
 		}
 	}
 	else
@@ -950,7 +931,6 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
 					flag = false;
 				}	
 				RtptoH264(rtpPacket, packetDataLen);
-				
             }
         }
 	} 

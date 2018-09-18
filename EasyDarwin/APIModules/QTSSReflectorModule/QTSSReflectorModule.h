@@ -42,8 +42,8 @@
 #include <string.h>
 #include <memory.h>
 #include <assert.h>
-#include <conio.h>
-#include <WinSock2.h>
+//#include <conio.h>
+//#include <WinSock2.h>
 
 #pragma comment(lib,"ws2_32.lib")
 
