@@ -54,6 +54,8 @@
 #include "SDPUtils.h"
 #include "sdpCache.h"
 
+#include <chrono>
+
 #ifndef __Win32__
     #include <unistd.h>
 #endif
@@ -618,12 +620,10 @@ QTSS_Error IntervalRole() // not used
     return QTSS_NoErr;
 }
 
-
-FILE * poutfile = NULL;
-
-int  OpenBitstreamFile(char *fn)
+int  OpenBitstreamFile(ReflectorStream* pStream, char *fn)
 {
-	if (NULL == (poutfile = fopen(fn, "wb")))
+	//pStream->SetFileName(fn);
+	if (NULL == (pStream->_pFile = fopen(fn, "wb")))
 	{
 		qtss_printf("Error: Open input file error\n");
 		getchar();
@@ -652,7 +652,7 @@ void FreeNALU(NALU_t *n)
 	}
 }
 
-int RtptoH264(char *bufIn, int len)
+int RtptoH264(ReflectorStream* pStream, char *bufIn, int len)
 {
 	unsigned char recvbuf[1500];
 	RTPpacket_t *p = NULL;
@@ -662,7 +662,6 @@ int RtptoH264(char *bufIn, int len)
 	FU_INDICATOR	*fu_ind = NULL;
 	FU_HEADER		*fu_hdr = NULL;
 	int total_bytes = 0;                 //当前包传出的数据
-	static int total_recved = 0;         //一共传输的数据
 	int fwrite_number = 0;               //存入文件的数据长度
 
 	memcpy(recvbuf, bufIn, len);          //复制rtp包 
@@ -728,16 +727,16 @@ int RtptoH264(char *bufIn, int len)
 	else if (nalu_hdr->TYPE >0 && nalu_hdr->TYPE < 24)  //单包
 	{
 		qtss_printf("this is signle package\n");
-		putc(0x00, poutfile);
-		putc(0x00, poutfile);
-		putc(0x00, poutfile);
-		putc(0x01, poutfile);
+		putc(0x00, pStream->_pFile);
+		putc(0x00, pStream->_pFile);
+		putc(0x00, pStream->_pFile);
+		putc(0x01, pStream->_pFile);
 		total_bytes += 4;
 		memcpy(p->payload, &recvbuf[13], len - 13);
 		p->paylen = len - 13;
-		fwrite(nalu_hdr, 1, 1, poutfile);
+		fwrite(nalu_hdr, 1, 1, pStream->_pFile);
 		total_bytes += 1;
-		fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+		fwrite_number = fwrite(p->payload, 1, p->paylen, pStream->_pFile);
 		total_bytes = p->paylen;
 		qtss_printf("packageLen + nal= %d\n", total_bytes);
 	}
@@ -779,7 +778,7 @@ int RtptoH264(char *bufIn, int len)
 			qtss_printf("this is FU-A last package\n");
 			memcpy(p->payload, &recvbuf[14], len - 14);
 			p->paylen = len - 14;
-			fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+			fwrite_number = fwrite(p->payload, 1, p->paylen, pStream->_pFile);
 			total_bytes = p->paylen;
 			qtss_printf("packageLen + FU = %d\n", total_bytes);
 		}
@@ -792,10 +791,10 @@ int RtptoH264(char *bufIn, int len)
 				unsigned char TYPE;
 				unsigned char nh;
 				qtss_printf("this is FU-A first package\n");
-				putc(0x00, poutfile);
-				putc(0x00, poutfile);
-				putc(0x00, poutfile);
-				putc(0x01, poutfile);
+				putc(0x00, pStream->_pFile);
+				putc(0x00, pStream->_pFile);
+				putc(0x00, pStream->_pFile);
+				putc(0x01, pStream->_pFile);
 				total_bytes += 4;
 
 				F = fu_ind->F << 7;
@@ -804,12 +803,12 @@ int RtptoH264(char *bufIn, int len)
 				//nh = n->forbidden_bit|n->nal_reference_idc|n->nal_unit_type;  //二进制文件也是按 大字节序存储
 				nh = F | NRI | TYPE;
 
-				putc(nh, poutfile);
+				putc(nh, pStream->_pFile);
 
 				total_bytes += 1;
 				memcpy(p->payload, &recvbuf[14], len - 14);
 				p->paylen = len - 14;
-				fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+				fwrite_number = fwrite(p->payload, 1, p->paylen, pStream->_pFile);
 				total_bytes = p->paylen;
 				qtss_printf("packageLen + FU_First = %d\n", total_bytes);
 			}
@@ -818,7 +817,7 @@ int RtptoH264(char *bufIn, int len)
 				qtss_printf("this is FU-A package\n");
 				memcpy(p->payload, &recvbuf[14], len - 14);
 				p->paylen = len - 14;
-				fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+				fwrite_number = fwrite(p->payload, 1, p->paylen, pStream->_pFile);
 				total_bytes = p->paylen;
 				qtss_printf("packageLen + FU = %d\n", total_bytes);
 			}
@@ -840,8 +839,6 @@ int RtptoH264(char *bufIn, int len)
 	{
 		qtss_printf("这个包有错误，30-31 没有定义\n");
 	}
-	total_recved += total_bytes;
-	qtss_printf("total_recved = %d\n", total_recved);
 	memset(recvbuf, 0, 1500);
 	free(p->payload);
 	free(p);
@@ -917,20 +914,37 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
 
             Bool16 isRTCP =false;
             if (theStream != NULL)
-            {   
+			{
+				std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+					std::chrono::system_clock::now().time_since_epoch()
+					);
+
 				if (packetChannel & 1)
                 {   serverReceivePort ++;
                     isRTCP = true;
                 }
                 theStream->PushPacket(rtpPacket,packetDataLen, isRTCP);
-                //qtss_printf("QTSSReflectorModule.cpp:ProcessRTPData Send RTSP packet channel=%u to UDP localServerAddr=%"   _U32BITARG_   " serverReceivePort=%"   _U32BITARG_   " packetDataLen=%u \n", (UInt16) packetChannel, localServerAddr, serverReceivePort,packetDataLen);
-				static bool flag = true;
-				if (true == flag)
+				if (false == theStream->GetFileFlag())
 				{
-					OpenBitstreamFile("./Movies/streamFile.264");
-					flag = false;
+					char fileName[100] = { 0, };
+
+					theStream->_lastFileTimestamp = ms.count();
+					sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), ms.count());
+					OpenBitstreamFile(theStream, fileName);
+					theStream->SetFileFlag(true);
+					qtss_printf("<--------------new file:%s------------->\n", fileName);
 				}	
-				RtptoH264(rtpPacket, packetDataLen);
+				RtptoH264(theStream, rtpPacket, packetDataLen);
+				//超过设置时间，存储
+				if (ms.count() - theStream->_lastFileTimestamp > FILE_MAX_TIMESTAMP)
+				{
+					if (theStream->_pFile != nullptr)
+					{
+						fclose(theStream->_pFile);
+						theStream->_pFile = nullptr;
+					}
+					theStream->SetFileFlag(false);
+				}
             }
         }
 	} 

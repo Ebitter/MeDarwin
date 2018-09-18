@@ -55,6 +55,7 @@
 
 /*fantasy add this*/
 #include "keyframecache.h"
+//#include <string>
 
 //This will add some printfs that are useful for checking the thinning
 #define REFLECTOR_THINNING_DEBUGGING 0 
@@ -448,6 +449,10 @@ inline  void                    UpdateBitRate(SInt64 currentTime);
 
 		void					SetMyReflectorSession(ReflectorSession* reflector)	{ fMyReflectorSession = reflector; }
 		ReflectorSession*		GetMyReflectorSession()	{ return fMyReflectorSession; }
+		void					SetFileFlag(const bool flag){ _fileFlag = flag; }
+		bool					GetFileFlag(void){ return _fileFlag; }
+		//void					SetFileName(const std::string name){ _fileName = name; }
+		//std::string				GetFileName(void){ return _fileName; }
 
     private:
     
@@ -532,10 +537,14 @@ inline  void                    UpdateBitRate(SInt64 currentTime);
 		static UInt32       sRelocatePacketAgeMSec;	
         
         friend class ReflectorSocket;
-        friend class ReflectorSender;
+		friend class ReflectorSender;
+		bool				_fileFlag{ false };
+		//std::string			_fileName{ "" };
 
 public:
 		CKeyFrameCache*		pkeyFrameCache;
+		FILE *				_pFile;
+		long long			_lastFileTimestamp{ 0 };
 };
 
 

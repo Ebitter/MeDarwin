@@ -50,7 +50,7 @@
 
 #define  MAXDATASIZE 1500
 #define  H264 96                   //负载类型
-
+#define	 FILE_MAX_TIMESTAMP		10*60*1000	//10分钟
 typedef struct
 {
 	unsigned char v;               //!< 版本号
