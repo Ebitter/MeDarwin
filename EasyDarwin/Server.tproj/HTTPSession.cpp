@@ -8,7 +8,8 @@
     File:       HTTPSession.cpp
     Contains:   实现对服务单元每一个Session会话的网络报文处理
 */
-
+//用户名 cretech
+//密码 8256@&!%
 #undef COMMON_UTILITIES_LIB
 #include "HTTPSession.h"
 #include "QTSServerInterface.h"

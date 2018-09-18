@@ -619,6 +619,258 @@ QTSS_Error IntervalRole() // not used
 }
 
 
+FILE * poutfile = NULL;
+
+int  OpenBitstreamFile(char *fn)
+{
+	if (NULL == (poutfile = fopen(fn, "wb")))
+	{
+		qtss_printf("Error: Open input file error\n");
+		getchar();
+	}
+	return 1;
+}
+
+
+NALU_t *AllocNALU(int buffersize)
+{
+	NALU_t *n;
+
+	if ((n = (NALU_t*)calloc(1, sizeof(NALU_t))) == NULL)
+	{
+		qtss_printf("AllocNALU Error: Allocate Meory To NALU_t Failed ");
+		exit(0);
+	}
+	return n;
+}
+
+void FreeNALU(NALU_t *n)
+{
+	if (n)
+	{
+		free(n);
+	}
+}
+
+int RtptoH264(char *bufIn, int len)
+{
+	unsigned char recvbuf[1500];
+	RTPpacket_t *p = NULL;
+	RTP_HEADER * rtp_hdr = NULL;
+	NALU_HEADER * nalu_hdr = NULL;
+	NALU_t * n = NULL;
+	FU_INDICATOR	*fu_ind = NULL;
+	FU_HEADER		*fu_hdr = NULL;
+	int total_bytes = 0;                 //当前包传出的数据
+	static int total_recved = 0;         //一共传输的数据
+	int fwrite_number = 0;               //存入文件的数据长度
+
+	memcpy(recvbuf, bufIn, len);          //复制rtp包 
+	qtss_printf("包长度+ rtp头：   = %d\n", len);
+
+	//////////////////////////////////////////////////////////////////////////
+	//begin rtp_payload and rtp_header
+
+	p = (RTPpacket_t*)&recvbuf[0];
+
+	p = (RTPpacket_t *)malloc(sizeof (RTPpacket_t));
+	if (p == NULL)
+	{
+		qtss_printf("RTPpacket_t MMEMORY ERROR\n");
+	}
+	if ((p->payload = (unsigned char *)malloc(MAXDATASIZE)) == NULL)
+	{
+		qtss_printf("RTPpacket_t payload MMEMORY ERROR\n");
+	}
+
+	if ((rtp_hdr = (RTP_HEADER *)malloc(sizeof(RTP_HEADER))) == NULL)
+	{
+		qtss_printf("RTP_HEADER MEMORY ERROR\n");
+	}
+
+	rtp_hdr = (RTP_HEADER*)&recvbuf[0];
+	qtss_printf("版本号 : %d\n", rtp_hdr->version);
+	p->v = rtp_hdr->version;
+	p->p = rtp_hdr->padding;
+	p->x = rtp_hdr->extension;
+	p->cc = rtp_hdr->csrc_len;
+	qtss_printf("标志位 : %d\n", rtp_hdr->marker);
+	p->m = rtp_hdr->marker;
+	qtss_printf("负载类型:%d\n", rtp_hdr->payloadtype);
+	p->pt = rtp_hdr->payloadtype;
+	qtss_printf("包号   : %d \n", ntohl(rtp_hdr->seq_no));
+	p->seq = rtp_hdr->seq_no;
+	qtss_printf("时间戳 : %d\n", rtp_hdr->timestamp);
+	p->timestamp = rtp_hdr->timestamp;
+	qtss_printf("帧号   : %d\n", rtp_hdr->ssrc);
+	p->ssrc = rtp_hdr->ssrc;
+
+	//end rtp_payload and rtp_header
+	//////////////////////////////////////////////////////////////////////////
+	//begin nal_hdr
+	if (!(n = AllocNALU(800000)))          //为结构体nalu_t及其成员buf分配空间。返回值为指向nalu_t存储空间的指针
+	{
+		qtss_printf("NALU_t MMEMORY ERROR\n");
+	}
+
+	if ((nalu_hdr = (NALU_HEADER *)malloc(sizeof(NALU_HEADER))) == NULL)
+	{
+		qtss_printf("NALU_HEADER MEMORY ERROR\n");
+	}
+
+	nalu_hdr = (NALU_HEADER*)&recvbuf[12];                        //网络传输过来的字节序 ，当存入内存还是和文档描述的相反，只要匹配网络字节序和文档描述即可传输正确。
+	qtss_printf("forbidden_zero_bit: %d\n", nalu_hdr->F);              //网络传输中的方式为：F->NRI->TYPE.. 内存中存储方式为 TYPE->NRI->F (和nal头匹配)。
+
+	n->forbidden_bit = nalu_hdr->F << 7;                          //内存中的字节序。
+	qtss_printf("nal_reference_idc:  %d\n", nalu_hdr->NRI);
+
+	n->nal_reference_idc = nalu_hdr->NRI << 5;
+	qtss_printf("nal 负载类型:       %d\n", nalu_hdr->TYPE);
+	n->nal_unit_type = nalu_hdr->TYPE;
+
+	//end nal_hdr
+	//////////////////////////////////////////////////////////////////////////
+	//开始解包
+	if (nalu_hdr->TYPE == 0)
+	{
+		qtss_printf("这个包有错误，0无定义\n");
+	}
+	else if (nalu_hdr->TYPE >0 && nalu_hdr->TYPE < 24)  //单包
+	{
+		qtss_printf("当前包为单包\n");
+		putc(0x00, poutfile);
+		putc(0x00, poutfile);
+		putc(0x00, poutfile);
+		putc(0x01, poutfile);
+		total_bytes += 4;
+		memcpy(p->payload, &recvbuf[13], len - 13);
+		p->paylen = len - 13;
+		fwrite(nalu_hdr, 1, 1, poutfile);
+		total_bytes += 1;
+		fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+		total_bytes = p->paylen;
+		qtss_printf("包长度 + nal= %d\n", total_bytes);
+	}
+	else if (nalu_hdr->TYPE == 24)      //STAP-A   单一时间的组合包
+	{
+		qtss_printf("当前包为STAP-A\n");
+	}
+	else if (nalu_hdr->TYPE == 25)     //STAP-B   单一时间的组合包
+	{
+		qtss_printf("当前包为STAP-B\n");
+	}
+	else if (nalu_hdr->TYPE == 26)        //MTAP16   多个时间的组合包
+	{
+		qtss_printf("当前包为MTAP16\n");
+	}
+	else if (nalu_hdr->TYPE == 27)       //MTAP24   多个时间的组合包
+	{
+		qtss_printf("当前包为MTAP24\n");
+	}
+	else if (nalu_hdr->TYPE == 28)       //FU-A分片包，解码顺序和传输顺序相同
+	{
+		if ((fu_ind = (FU_INDICATOR *)malloc(sizeof(FU_INDICATOR))) == NULL)
+		{
+			qtss_printf("FU_INDICATOR MEMORY ERROR\n");
+		}
+		if ((fu_hdr = (FU_HEADER *)malloc(sizeof(FU_HEADER))) == NULL)
+		{
+			qtss_printf("FU_HEADER MEMORY ERROR\n");
+		}
+
+		fu_ind = (FU_INDICATOR*)&recvbuf[12];
+		qtss_printf("FU_INDICATOR->F     :%d\n", fu_ind->F);
+		n->forbidden_bit = fu_ind->F << 7;
+		qtss_printf("FU_INDICATOR->NRI   :%d\n", fu_ind->NRI);
+		n->nal_reference_idc = fu_ind->NRI << 5;
+		qtss_printf("FU_INDICATOR->TYPE  :%d\n", fu_ind->TYPE);
+		n->nal_unit_type = fu_ind->TYPE;
+
+		fu_hdr = (FU_HEADER*)&recvbuf[13];
+		qtss_printf("FU_HEADER->S        :%d\n", fu_hdr->S);
+		qtss_printf("FU_HEADER->E        :%d\n", fu_hdr->E);
+		qtss_printf("FU_HEADER->R        :%d\n", fu_hdr->R);
+		qtss_printf("FU_HEADER->TYPE     :%d\n", fu_hdr->TYPE);
+		n->nal_unit_type = fu_hdr->TYPE;               //应用的是FU_HEADER的TYPE
+
+		if (rtp_hdr->marker == 1)                      //分片包最后一个包
+		{
+			qtss_printf("当前包为FU-A分片包最后一个包\n");
+			memcpy(p->payload, &recvbuf[14], len - 14);
+			p->paylen = len - 14;
+			fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+			total_bytes = p->paylen;
+			qtss_printf("包长度 + FU = %d\n", total_bytes);
+		}
+		else if (rtp_hdr->marker == 0)                 //分片包 但不是最后一个包
+		{
+			if (fu_hdr->S == 1)                        //分片的第一个包
+			{
+				unsigned char F;
+				unsigned char NRI;
+				unsigned char TYPE;
+				unsigned char nh;
+				qtss_printf("当前包为FU-A分片包第一个包\n");
+				putc(0x00, poutfile);
+				putc(0x00, poutfile);
+				putc(0x00, poutfile);
+				putc(0x01, poutfile);
+				total_bytes += 4;
+
+				F = fu_ind->F << 7;
+				NRI = fu_ind->NRI << 5;
+				TYPE = fu_hdr->TYPE;                                            //应用的是FU_HEADER的TYPE
+				//nh = n->forbidden_bit|n->nal_reference_idc|n->nal_unit_type;  //二进制文件也是按 大字节序存储
+				nh = F | NRI | TYPE;
+
+				putc(nh, poutfile);
+
+				total_bytes += 1;
+				memcpy(p->payload, &recvbuf[14], len - 14);
+				p->paylen = len - 14;
+				fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+				total_bytes = p->paylen;
+				qtss_printf("包长度 + FU_First = %d\n", total_bytes);
+			}
+			else                                      //如果不是第一个包
+			{
+				qtss_printf("当前包为FU-A分片包\n");
+				memcpy(p->payload, &recvbuf[14], len - 14);
+				p->paylen = len - 14;
+				fwrite_number = fwrite(p->payload, 1, p->paylen, poutfile);
+				total_bytes = p->paylen;
+				qtss_printf("包长度 + FU = %d\n", total_bytes);
+			}
+		}
+	}
+	else if (nalu_hdr->TYPE == 29)                //FU-B分片包，解码顺序和传输顺序相同
+	{
+		if (rtp_hdr->marker == 1)                  //分片包最后一个包
+		{
+			qtss_printf("当前包为FU-B分片包最后一个包\n");
+
+		}
+		else if (rtp_hdr->marker == 0)             //分片包 但不是最后一个包
+		{
+			qtss_printf("当前包为FU-B分片包\n");
+		}
+	}
+	else
+	{
+		qtss_printf("这个包有错误，30-31 没有定义\n");
+	}
+	total_recved += total_bytes;
+	qtss_printf("total_recved = %d\n", total_recved);
+	memset(recvbuf, 0, 1500);
+	free(p->payload);
+	free(p);
+	FreeNALU(n);
+	//结束解包
+	//////////////////////////////////////////////////////////////////////////
+	return 1;
+}
+
+
 QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
 {
     if (!sBroadcastPushEnabled)
@@ -691,6 +943,14 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
                 }
                 theStream->PushPacket(rtpPacket,packetDataLen, isRTCP);
                 //qtss_printf("QTSSReflectorModule.cpp:ProcessRTPData Send RTSP packet channel=%u to UDP localServerAddr=%"   _U32BITARG_   " serverReceivePort=%"   _U32BITARG_   " packetDataLen=%u \n", (UInt16) packetChannel, localServerAddr, serverReceivePort,packetDataLen);
+				static bool flag = true;
+				if (true == flag)
+				{
+					OpenBitstreamFile("./Movies/streamFile.264");
+					flag = false;
+				}	
+				RtptoH264(rtpPacket, packetDataLen);
+				
             }
         }
 	} 
@@ -1272,7 +1532,7 @@ QTSS_Error DoDescribe(QTSS_StandardRTSP_Params* inParams)
         adjustMediaBandwidth = QTSSModuleUtils::HavePlayerProfile(sServerPrefs,inParams,QTSSModuleUtils::kAdjustBandwidth);
 
     if (adjustMediaBandwidth)
-        adjustMediaBandwidthPercent = (Float32) sAdjustMediaBandwidthPercent / 100.0;
+        adjustMediaBandwidthPercent = (Float32) (sAdjustMediaBandwidthPercent / 100.0);
 
     ResizeableStringFormatter buffer;
     SDPContainer* insertMediaLines = QTSS3GPPModuleUtils::Get3GPPSDPFeatureListCopy(buffer);
