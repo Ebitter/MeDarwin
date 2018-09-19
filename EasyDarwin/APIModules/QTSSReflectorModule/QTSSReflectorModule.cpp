@@ -54,7 +54,8 @@
 #include "SDPUtils.h"
 #include "sdpCache.h"
 
-#include <chrono>
+//#include <chrono>
+#include <ctime>
 
 #ifndef __Win32__
     #include <unistd.h>
@@ -915,10 +916,10 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
             Bool16 isRTCP =false;
             if (theStream != NULL)
 			{
-				std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+				/*std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
 					std::chrono::system_clock::now().time_since_epoch()
-					);
-
+					);*/
+				std::time_t t_s = std::time(0);
 				if (packetChannel & 1)
                 {   serverReceivePort ++;
                     isRTCP = true;
@@ -928,23 +929,29 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
 				{
 					char fileName[100] = { 0, };
 
-					theStream->_lastFileTimestamp = ms.count();
-					sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), ms.count());
+					//theStream->_lastFileTimestamp = ms.count();
+					//sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), ms.count());
+					theStream->_lastFileTimestamp = t_s;
+					sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName()+1, t_s);
+					qtss_printf("<--------------new file:%s------------->\n", fileName);
+					qtss_printf("StreamName=  %s", theStream->GetMyReflectorSession()->GetStreamName());
+					qtss_printf("SessionName=  %s", theStream->GetMyReflectorSession()->GetSessionName());
 					OpenBitstreamFile(theStream, fileName);
 					theStream->SetFileFlag(true);
-					qtss_printf("<--------------new file:%s------------->\n", fileName);
 				}	
 				RtptoH264(theStream, rtpPacket, packetDataLen);
 				//超过设置时间，存储
-				if (ms.count() - theStream->_lastFileTimestamp > FILE_MAX_TIMESTAMP)
+				
+				if (t_s - theStream->_lastFileTimestamp > FILE_MAX_TIMESTAMP)
 				{
-					if (theStream->_pFile != nullptr)
+					if (theStream->_pFile != NULL)
 					{
 						fclose(theStream->_pFile);
-						theStream->_pFile = nullptr;
+						theStream->_pFile = NULL;
 					}
 					theStream->SetFileFlag(false);
 				}
+				
             }
         }
 	} 
