@@ -57,6 +57,7 @@ static UInt32                   sDefaultBucketDelayInMsec           = 73;
 static Bool16                   sDefaultUsePacketReceiveTime        = false; 
 static UInt32                   sDefaultMaxFuturePacketTimeSec      = 60;
 static UInt32                   sDefaultFirstPacketOffsetMsec       = 500;
+static Bool16					sDefaultIsSave264					= false;
 
 UInt32                          ReflectorStream::sBucketSize  = 16;
 UInt32                          ReflectorStream::sOverBufferInMsec = 10000; // more or less what the client over buffer will be
@@ -70,6 +71,8 @@ Bool16                          ReflectorStream::sUsePacketReceiveTime = false;
 UInt32                          ReflectorStream::sFirstPacketOffsetMsec = 500;
 
 UInt32                          ReflectorStream::sRelocatePacketAgeMSec = 3000;
+
+Bool16							ReflectorStream::_isSave264 = false;
 	
 void ReflectorStream::Register()
 {
@@ -101,6 +104,9 @@ void ReflectorStream::Initialize(QTSS_ModulePrefsObject inPrefs)
 
     QTSSModuleUtils::GetAttribute(inPrefs, "reflector_rtp_info_offset_msec", qtssAttrDataTypeUInt32,
                               &ReflectorStream::sFirstPacketOffsetMsec, &sDefaultFirstPacketOffsetMsec, sizeof(sDefaultFirstPacketOffsetMsec));
+	
+	QTSSModuleUtils::GetAttribute(inPrefs, "save_stream_to_file", qtssAttrDataTypeBool16,
+		&ReflectorStream::_isSave264, &sDefaultIsSave264, sizeof(sDefaultIsSave264));
 
     ReflectorStream::sOverBufferInMsec = sOverBufferInSec * 1000;
     ReflectorStream::sMaxFuturePacketMSec = sMaxFuturePacketSec * 1000;

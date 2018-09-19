@@ -666,7 +666,7 @@ int RtptoH264(ReflectorStream* pStream, char *bufIn, int len)
 	int fwrite_number = 0;               //存入文件的数据长度
 
 	memcpy(recvbuf, bufIn, len);          //复制rtp包 
-	qtss_printf("packLen+ rtpHead：   = %d\n", len);
+	qtss_printf("packLen+ rtpHead = %d\n", len);
 
 	//////////////////////////////////////////////////////////////////////////
 	//begin rtp_payload and rtp_header
@@ -916,42 +916,41 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
             Bool16 isRTCP =false;
             if (theStream != NULL)
 			{
-				/*std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
-					std::chrono::system_clock::now().time_since_epoch()
-					);*/
-				std::time_t t_s = std::time(0);
 				if (packetChannel & 1)
                 {   serverReceivePort ++;
                     isRTCP = true;
                 }
                 theStream->PushPacket(rtpPacket,packetDataLen, isRTCP);
-				if (false == theStream->GetFileFlag())
-				{
-					char fileName[100] = { 0, };
 
-					//theStream->_lastFileTimestamp = ms.count();
-					//sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), ms.count());
-					theStream->_lastFileTimestamp = t_s;
-					sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName()+1, t_s);
-					qtss_printf("<--------------new file:%s------------->\n", fileName);
-					qtss_printf("StreamName=  %s", theStream->GetMyReflectorSession()->GetStreamName());
-					qtss_printf("SessionName=  %s", theStream->GetMyReflectorSession()->GetSessionName());
-					OpenBitstreamFile(theStream, fileName);
-					theStream->SetFileFlag(true);
-				}	
-				RtptoH264(theStream, rtpPacket, packetDataLen);
-				//超过设置时间，存储
-				
-				if (t_s - theStream->_lastFileTimestamp > FILE_MAX_TIMESTAMP)
+				if (ReflectorStream::_isSave264)
 				{
-					if (theStream->_pFile != NULL)
+					std::time_t t_s = std::time(0);
+					if (false == theStream->GetFileFlag())
 					{
-						fclose(theStream->_pFile);
-						theStream->_pFile = NULL;
+						char fileName[100] = { 0, };
+
+						//theStream->_lastFileTimestamp = ms.count();
+						//sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), ms.count());
+						theStream->_lastFileTimestamp = t_s;
+						sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName() + 1, t_s);
+						qtss_printf("<--------------new file:%s------------->\n", fileName);
+						qtss_printf("StreamName=  %s", theStream->GetMyReflectorSession()->GetStreamName());
+						qtss_printf("SessionName=  %s", theStream->GetMyReflectorSession()->GetSessionName());
+						OpenBitstreamFile(theStream, fileName);
+						theStream->SetFileFlag(true);
 					}
-					theStream->SetFileFlag(false);
+					RtptoH264(theStream, rtpPacket, packetDataLen);
+					//超过设置时间，存储
+					if (t_s - theStream->_lastFileTimestamp > FILE_MAX_TIMESTAMP)
+					{
+						if (theStream->_pFile != NULL)
+						{
+							fclose(theStream->_pFile);
+							theStream->_pFile = NULL;
+						}
+						theStream->SetFileFlag(false);
+					}
 				}
-				
             }
         }
 	} 

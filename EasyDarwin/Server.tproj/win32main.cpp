@@ -64,7 +64,7 @@ int main(int argc, char * argv[])
     int ch;
     
     char* theConfigFilePath = "./easydarwin.cfg";
-    char* theXMLFilePath = "./easydarwin.xml";
+    char* theXMLFilePath = "./streamserver.xml";
     Bool16 notAService = false;
     Bool16 theXMLPrefsExist = true;
     Bool16 dontFork = false;

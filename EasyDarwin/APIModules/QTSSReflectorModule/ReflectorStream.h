@@ -535,6 +535,7 @@ inline  void                    UpdateBitRate(SInt64 currentTime);
         static UInt32       sFirstPacketOffsetMsec;
 
 		static UInt32       sRelocatePacketAgeMSec;	
+
         
         friend class ReflectorSocket;
 		friend class ReflectorSender;
@@ -545,6 +546,7 @@ public:
 		CKeyFrameCache*		pkeyFrameCache;
 		FILE *				_pFile;
 		long long			_lastFileTimestamp{ 0 };
+		static Bool16		_isSave264;
 };
 
 
