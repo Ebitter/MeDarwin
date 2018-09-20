@@ -316,7 +316,7 @@ int main(int argc, char * argv[])
     UInt32 debugLevel = 0;
     UInt32 debugOptions = kRunServerDebug_Off;
 	static char* sDefaultConfigFilePath = DEFAULTPATHS_ETC_DIR_OLD "easydarwin.conf";
-	static char* sDefaultXMLFilePath = DEFAULTPATHS_ETC_DIR "easydarwin.xml";
+	static char* sDefaultXMLFilePath = "./streamserver.xml";
 
     char* theConfigFilePath = sDefaultConfigFilePath;
     char* theXMLFilePath = sDefaultXMLFilePath;
@@ -349,7 +349,7 @@ int main(int argc, char * argv[])
                                 
                 break;
             case 'f':
-				theXMLFilePath  = DEFAULTPATHS_ETC_DIR "easydarwin.xml";
+				theXMLFilePath  = DEFAULTPATHS_ETC_DIR "streamserver.xml";
                 break;
             case 'p':
                 Assert(optarg != NULL);// this means we didn't declare getopt options correctly or there is a bug in getopt.
@@ -400,7 +400,7 @@ int main(int argc, char * argv[])
         ::exit(0);
     }
 
-
+	qtss_printf("theXMLFilePath=%s.\n", theXMLFilePath);
     XMLPrefsParser theXMLParser(theXMLFilePath);
     
     //
