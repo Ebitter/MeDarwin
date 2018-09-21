@@ -930,10 +930,9 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
 						//theStream->_lastFileTimestamp = ms.count();
 						//sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), ms.count());
 						theStream->_lastFileTimestamp = t_s;
-						sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName() + 1, t_s);
+						sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), t_s);
 						qtss_printf("<--------------new file:%s------------->\n", fileName);
-						qtss_printf("StreamName=  %s", theStream->GetMyReflectorSession()->GetStreamName());
-						qtss_printf("SessionName=  %s", theStream->GetMyReflectorSession()->GetSessionName());
+						qtss_printf("StreamName=  %s\n", theStream->GetMyReflectorSession()->GetStreamName());
 						OpenBitstreamFile(theStream, fileName);
 						theStream->SetFileFlag(true);
 					}

@@ -219,7 +219,7 @@
 		<PREF NAME="BroadcasterGroup" >broadcaster</PREF>
 		<PREF NAME="ip_allow_list" >127.0.0.*</PREF>
 		<PREF NAME="hls_output_enabled" TYPE="Bool16" >true</PREF>
-		<PREF NAME="save_stream_to_file" TYPE="Bool16" >true</PREF>
+		<PREF NAME="save_stream_to_file" TYPE="Bool16" >false</PREF>
 	</MODULE>
 	<MODULE NAME="QTSSFlowControlModule" >
 		<PREF NAME="loss_thin_tolerance" TYPE="UInt32" >30</PREF>
@@ -246,13 +246,13 @@
 		<PREF NAME="enable_remote_admin" TYPE="Bool16" >true</PREF>
 		<PREF NAME="IPAccessList" >127.0.0.*</PREF>
 		<PREF NAME="AdministratorGroup" >admin</PREF>
-		<PREF NAME="http_port" TYPE="UInt16" >8088</PREF>
+		<PREF NAME="http_port" TYPE="UInt16" >80</PREF>
 		<PREF NAME="document_root" >./html/</PREF>
 	</MODULE>
 	<MODULE NAME="QTSSErrorLogModule" ></MODULE>
 	<MODULE NAME="QTSSPosixFileSysModule" ></MODULE>
 	<MODULE NAME="EasyHLSModule" >
-		<PREF NAME="HTTP_ROOT_DIR" >http://127.0.0.1:80/</PREF>
+		<PREF NAME="HTTP_ROOT_DIR" >http://127.0.0.1:8090/</PREF>
 		<PREF NAME="M3U8_VERSION" TYPE="UInt32" >3</PREF>
 		<PREF NAME="ALLOW_CACHE" TYPE="Bool16" >false</PREF>
 		<PREF NAME="TARGET_DURATION" TYPE="UInt32" >4</PREF>
