@@ -28,6 +28,8 @@
 #include "OSHeaders.h"
 #include "QTSSRTSPProtocol.h"
 
+#include "../Include/PlatformHeader.h"
+#include "OSHeaders.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

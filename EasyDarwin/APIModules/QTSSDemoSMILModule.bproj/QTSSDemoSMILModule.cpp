@@ -392,7 +392,7 @@ QTSS_Error FilterRequest(QTSS_Filter_Params* inParams)
 
     GenerateHotHitSMIL(smilFileBuf);
                 
-    qtss_sprintf(contentLength, "%"_U32BITARG_"", (UInt32) ::strlen(smilFileBuf));
+    qtss_sprintf(contentLength, "%""u""", (UInt32) ::strlen(smilFileBuf));
     // Allocate memory for theFileBuffer
     // Write the HTTP header prefix into the buffer
     ::strcpy(theFileBuffer, sRespHeaderPrefix.Ptr);

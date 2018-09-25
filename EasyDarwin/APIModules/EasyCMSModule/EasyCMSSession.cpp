@@ -348,9 +348,9 @@ QTSS_Error EasyCMSSession::CSFreeStream()
 	//body[EASY_TAG_CHANNEL]		=	fChannel;
 	body[EASY_TAG_PROTOCOL]		=	EasyProtocol::GetProtocolString(EASY_PROTOCOL_TYPE_RTSP);
 	body[EASY_TAG_RESERVE]		=	"1";
-
-	req.SetHead(header);
-	req.SetBody(body);
+    //compile not pass, shield this by ebitter_20180925
+    //req.SetHead(header);
+    //req.SetBody(body);
 
 	string msg = req.GetMsg();
 
