@@ -54,6 +54,8 @@
 #include "SDPUtils.h"
 #include "sdpCache.h"
 
+#include "../LogModule/Logger.h"
+
 //#include <chrono>
 #include <ctime>
 
@@ -931,8 +933,7 @@ QTSS_Error ProcessRTPData(QTSS_IncomingData_Params* inParams)
 						//sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), ms.count());
 						theStream->_lastFileTimestamp = t_s;
 						sprintf(fileName, "./Movies/stream%s_%lld.264", theStream->GetMyReflectorSession()->GetStreamName(), t_s);
-						qtss_printf("<--------------new file:%s------------->\n", fileName);
-						qtss_printf("StreamName=  %s\n", theStream->GetMyReflectorSession()->GetStreamName());
+                        log_info("<--------------new file:%s------------->\n", fileName);
 						OpenBitstreamFile(theStream, fileName);
 						theStream->SetFileFlag(true);
 					}

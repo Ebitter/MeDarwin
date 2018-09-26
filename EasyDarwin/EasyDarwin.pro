@@ -53,12 +53,19 @@ LIBS += -L$$PWD/../CommonUtilitiesLib/x64 -lCommonUtilitiesLib
 LIBS += -L$$PWD/../EasyProtocol/EasyProtocol/x64/ -lEasyProtocol
 LIBS += -L$$PWD/../EasyProtocol/jsoncpp/x64/ -ljsoncpp
 LIBS += -L$$PWD/../EasyRedisClient/x64/ -leasyredisclient
+LIBS += -L$$PWD/../EasyDarwin/x64/ -lLogModule
 LIBS += -L$$PWD/./Lib/x64/ -leasyrtspclient
 LIBS += -L$$PWD/./Lib/x64/ -leasyhls
 LIBS += -L$$PWD/./Lib/x64/ -lEasyAACEncoder
 LIBS += -L$$PWD/./Lib/x64/ -leasypusher
 LIBS += -ldl
 LIBS += -lcrypt
+
+
+LIBS += -L$$PWD/../Lib/x64/ -lPocoJSON
+LIBS += -L$$PWD/../Lib/x64/ -lPocoXML
+LIBS += -L$$PWD/../Lib/x64/ -lPocoUtil
+LIBS += -L$$PWD/../Lib/x64/ -lPocoFoundation
 }
 
 # Input

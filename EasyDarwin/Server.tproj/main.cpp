@@ -63,6 +63,7 @@
 #include "QTSServer.h"
 #include "QTSSExpirationDate.h"
 #include "GenerateXMLPrefs.h"
+#include "../LogModule/Logger.h"
 
 static int sSigIntCount = 0;
 static int sSigTermCount = 0;
@@ -207,7 +208,10 @@ Bool16 RestartServer(char* theXMLFilePath)
 int main(int argc, char * argv[]) 
 {
     extern char* optarg;
-    
+
+    //log_init(config, NULL, 0);
+    log_init("logger.config", NULL, 0);
+    log_info("main starting...");
     //Get Absolute Path
 	char sAbsolutePath[MAX_PATH];
 	int cnt = readlink("/proc/self/exe", sAbsolutePath, MAX_PATH);
