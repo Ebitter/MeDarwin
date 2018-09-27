@@ -628,7 +628,7 @@ int  OpenBitstreamFile(ReflectorStream* pStream, char *fn)
 	//pStream->SetFileName(fn);
 	if (NULL == (pStream->_pFile = fopen(fn, "wb")))
 	{
-		qtss_printf("Error: Open input file error\n");
+		log_error("Error: Open input file error\n");
 		getchar();
 	}
 	return 1;
@@ -641,7 +641,7 @@ NALU_t *AllocNALU(int buffersize)
 
 	if ((n = (NALU_t*)calloc(1, sizeof(NALU_t))) == NULL)
 	{
-		qtss_printf("AllocNALU Error: Allocate Meory To NALU_t Failed ");
+		log_error("AllocNALU Error: Allocate Meory To NALU_t Failed ");
 		exit(0);
 	}
 	return n;
@@ -676,11 +676,11 @@ int RtptoH264(ReflectorStream* pStream, char *bufIn, int len)
 	p = (RTPpacket_t *)malloc(sizeof (RTPpacket_t));
 	if (p == NULL)
 	{
-		qtss_printf("RTPpacket_t MMEMORY ERROR\n");
+		log_warn("streamName=%s, RTPpacket_t MMEMORY ERROR\n", pStream->GetMyReflectorSession()->GetStreamName());
 	}
 	if ((p->payload = (unsigned char *)malloc(MAXDATASIZE)) == NULL)
 	{
-		qtss_printf("RTPpacket_t payload MMEMORY ERROR\n");
+		log_warn("streamName=%s, RTPpacket_t payload MMEMORY ERROR\n", pStream->GetMyReflectorSession()->GetStreamName());
 	}
 
 	rtp_hdr = (RTP_HEADER*)&recvbuf[0];
@@ -705,7 +705,7 @@ int RtptoH264(ReflectorStream* pStream, char *bufIn, int len)
 	//begin nal_hdr
 	if (!(n = AllocNALU(800000)))          //为结构体nalu_t及其成员buf分配空间。返回值为指向nalu_t存储空间的指针
 	{
-		qtss_printf("NALU_t MMEMORY ERROR\n");
+		log_warn("streamName=%s, NALU_t MMEMORY ERROR\n", pStream->GetMyReflectorSession()->GetStreamName());
 	}
 
 	nalu_hdr = (NALU_HEADER*)&recvbuf[12];                        //网络传输过来的字节序 ，当存入内存还是和文档描述的相反，只要匹配网络字节序和文档描述即可传输正确。
@@ -723,7 +723,7 @@ int RtptoH264(ReflectorStream* pStream, char *bufIn, int len)
 	//开始解包
 	if (nalu_hdr->TYPE == 0)
 	{
-		qtss_printf("这个包有错误，0无定义\n");
+		log_warn("streamName=%s, package error，Type 0 undefined\n", pStream->GetMyReflectorSession()->GetStreamName());
 	}
 	else if (nalu_hdr->TYPE >0 && nalu_hdr->TYPE < 24)  //单包
 	{
@@ -838,7 +838,7 @@ int RtptoH264(ReflectorStream* pStream, char *bufIn, int len)
 	}
 	else
 	{
-		qtss_printf("这个包有错误，30-31 没有定义\n");
+		log_warn("streamName=%s, package error，30-31 undefined!\n", pStream->GetMyReflectorSession()->GetStreamName());
 	}
 	memset(recvbuf, 0, 1500);
 	free(p->payload);
@@ -1555,7 +1555,7 @@ QTSS_Error DoDescribe(QTSS_StandardRTSP_Params* inParams)
 	sSessionMap->Release(theSession->GetRef());
 
 #ifdef REFLECTORSESSION_DEBUG
-	qtss_printf("QTSSReflectorModule.cpp:DoDescribe Session =%p refcount=%"   _U32BITARG_   "\n", theSession->GetRef(), theSession->GetRef()->GetRefCount() ) ;
+	log_info("QTSSReflectorModule.cpp:DoDescribe Session =%p refcount=%"   _U32BITARG_   "\n", theSession->GetRef(), theSession->GetRef()->GetRefCount() ) ;
 #endif
 
     return QTSS_NoErr;
@@ -1931,7 +1931,7 @@ QTSS_Error DoSetup(QTSS_StandardRTSP_Params* inParams)
             theSession->AddBroadcasterClientSession(inParams);
 
 #ifdef REFLECTORSESSION_DEBUG
-	qtss_printf("QTSSReflectorModule.cpp:DoSetup Session =%p refcount=%"   _U32BITARG_   "\n", theSession->GetRef(), theSession->GetRef()->GetRefCount() ) ;
+	log_info("QTSSReflectorModule.cpp:DoSetup Session =%p refcount=%"   _U32BITARG_   "\n", theSession->GetRef(), theSession->GetRef()->GetRefCount() ) ;
 #endif
             
         return QTSS_NoErr;      
@@ -2009,7 +2009,7 @@ QTSS_Error DoSetup(QTSS_StandardRTSP_Params* inParams)
     (void)QTSS_SendStandardRTSPResponse(inParams->inRTSPRequest, newStream, qtssSetupRespDontWriteSSRC);
 
 #ifdef REFLECTORSESSION_DEBUG
-	qtss_printf("QTSSReflectorModule.cpp:DoSetup Session =%p refcount=%"   _U32BITARG_   "\n", theSession->GetRef(), theSession->GetRef()->GetRefCount() ) ;
+	log_info("QTSSReflectorModule.cpp:DoSetup Session =%p refcount=%"   _U32BITARG_   "\n", theSession->GetRef(), theSession->GetRef()->GetRefCount() ) ;
 #endif
 
     return QTSS_NoErr;
@@ -2237,7 +2237,7 @@ QTSS_Error DoPlay(QTSS_StandardRTSP_Params* inParams, ReflectorSession* inSessio
     (void)QTSS_SendStandardRTSPResponse(inParams->inRTSPRequest, inParams->inClientSession, flags);
 
 #ifdef REFLECTORSESSION_DEBUG
-	qtss_printf("QTSSReflectorModule.cpp:DoPlay Session =%p refcount=%"   _U32BITARG_   "\n", inSession->GetRef(), inSession->GetRef()->GetRefCount() ) ;
+	log_info("QTSSReflectorModule.cpp:DoPlay Session =%p refcount=%"   _U32BITARG_   "\n", inSession->GetRef(), inSession->GetRef()->GetRefCount() ) ;
 #endif
 
     return QTSS_NoErr;
@@ -2398,13 +2398,13 @@ void RemoveOutput(ReflectorOutput* inOutput, ReflectorSession* inSession, Bool16
 			}  
             
 #ifdef REFLECTORSESSION_DEBUG
-	qtss_printf("QTSSReflectorModule.cpp:RemoveOutput Session =%p refcount=%"   _U32BITARG_   "\n", inSession->GetRef(), inSession->GetRef()->GetRefCount() ) ;       
+	log_info("QTSSReflectorModule.cpp:RemoveOutput Session =%p refcount=%"   _U32BITARG_   "\n", inSession->GetRef(), inSession->GetRef()->GetRefCount() ) ;       
 #endif
             if (theSessionRef->GetRefCount() == 0)
             {
 
 #ifdef REFLECTORSESSION_DEBUG
-	qtss_printf("QTSSReflectorModule.cpp:RemoveOutput UnRegister and delete session =%p refcount=%"   _U32BITARG_   "\n", theSessionRef, theSessionRef->GetRefCount() ) ;       
+	log_info("QTSSReflectorModule.cpp:RemoveOutput UnRegister and delete session =%p refcount=%"   _U32BITARG_   "\n", theSessionRef, theSessionRef->GetRefCount() ) ;       
 #endif
 				sSessionMap->UnRegister(theSessionRef);
 				delete inSession;

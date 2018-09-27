@@ -34,6 +34,8 @@
 #include "QTSServer.h"
 #include "QTSSExpirationDate.h"
 #include "GenerateXMLPrefs.h"
+
+#include "../LogModule/Logger.h"
 //
 // Data
 static FilePrefsSource sPrefsSource(true); // Allow dups
@@ -68,7 +70,9 @@ int main(int argc, char * argv[])
     Bool16 notAService = false;
     Bool16 theXMLPrefsExist = true;
     Bool16 dontFork = false;
- 
+
+	log_init("logger.config", NULL, 0);
+	log_info("main starting...");
 #if _DEBUG
     char* compileType = "Compile_Flags/_DEBUG; ";
 #else
