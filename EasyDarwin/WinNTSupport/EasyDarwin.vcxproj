@@ -140,6 +140,7 @@
     <ClCompile Include="..\..\HTTPUtilitiesLib\HTTPRequestStream.cpp" />
     <ClCompile Include="..\..\HTTPUtilitiesLib\HTTPResponseStream.cpp" />
     <ClCompile Include="..\..\SafeStdLib\InternalStdLib.cpp" />
+    <ClCompile Include="..\Server.tproj\CrashHelper.cpp" />
     <ClCompile Include="..\Server.tproj\QTSSUserProfile.cpp" />
     <ClCompile Include="..\Server.tproj\RTPOverbufferWindow.cpp" />
     <ClCompile Include="..\PrefsSourceLib\XMLParser.cpp" />

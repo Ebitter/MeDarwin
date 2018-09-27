@@ -295,6 +295,7 @@ SOURCES += APICommonCode/QTAccessFile.cpp \
            Server.tproj/RTSPSession3GPP.cpp \
            Server.tproj/RTSPSessionInterface.cpp \
            Server.tproj/RunServer.cpp \
+           Server.tproj/CrashHelper.cpp \
            #Server.tproj/win32main.cpp \
            APIModules/EasyCMSModule/EasyCMSModule.cpp \
            APIModules/EasyCMSModule/EasyCMSSession.cpp \

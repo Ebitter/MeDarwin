@@ -64,11 +64,12 @@
 #include "QTSSExpirationDate.h"
 #include "GenerateXMLPrefs.h"
 #include "../LogModule/Logger.h"
-
+#include "CrashHelper.h"
 static int sSigIntCount = 0;
 static int sSigTermCount = 0;
 static pid_t sChildPID = 0;
 
+static CrashHelper crash;
 void usage();
 
 void usage()

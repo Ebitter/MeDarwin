@@ -23,7 +23,6 @@ void log_write(int level,const char* msg, const char* file, int line)
 {
     Poco::Logger& logger = GetDefaultChannel();
     int test = logger.getLevel();
-    printf("level=%d\n", test);
 
     switch(level)
     {

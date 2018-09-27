@@ -29,7 +29,7 @@ INCLUDEPATH += \
     LIBS += -L$$PWD/../EasyDarwin/Lib/ -lPocoFoundationd
 }
 unix {
-    CONFIG    = staticlib
+    CONFIG    += staticlib
     DESTDIR=../EasyDarwin/x64
     INCLUDEPATH += \
              $$BASE_PATH/3rdparty/poco1.9.0/include
