@@ -109,7 +109,7 @@ void ReflectorStream::Initialize(QTSS_ModulePrefsObject inPrefs)
 	QTSSModuleUtils::GetAttribute(inPrefs, "save_stream_to_file", qtssAttrDataTypeBool16,
 		&ReflectorStream::_isSave264, &sDefaultIsSave264, sizeof(sDefaultIsSave264));
 
-    log_warn("<-----------save_stream_to_file = %d-------->\n ", ReflectorStream::_isSave264);
+    log_info("<-----------save_stream_to_file = %d-------->\n ", ReflectorStream::_isSave264);
     ReflectorStream::sOverBufferInMsec = sOverBufferInSec * 1000;
     ReflectorStream::sMaxFuturePacketMSec = sMaxFuturePacketSec * 1000;
     ReflectorStream::sMaxPacketAgeMSec = (UInt32) (sOverBufferInMsec * 10.0); //allow a little time before deleting.

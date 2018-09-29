@@ -21,8 +21,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EasyProtocol", "..\..\EasyP
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EasyRedisClient", "..\..\EasyRedisClient\EasyRedisClient.vcxproj", "{B1878765-6FB3-4E82-926A-4A68539F8A8C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LogModule", "..\..\LogModule\LogModule.vcxproj", "{ECF49F95-8231-355D-8FEC-816AFC8B09BB}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -65,10 +63,6 @@ Global
 		{B1878765-6FB3-4E82-926A-4A68539F8A8C}.Debug|Win32.Build.0 = Debug|Win32
 		{B1878765-6FB3-4E82-926A-4A68539F8A8C}.Release|Win32.ActiveCfg = Release|Win32
 		{B1878765-6FB3-4E82-926A-4A68539F8A8C}.Release|Win32.Build.0 = Release|Win32
-		{ECF49F95-8231-355D-8FEC-816AFC8B09BB}.Debug|Win32.ActiveCfg = Debug|Win32
-		{ECF49F95-8231-355D-8FEC-816AFC8B09BB}.Debug|Win32.Build.0 = Debug|Win32
-		{ECF49F95-8231-355D-8FEC-816AFC8B09BB}.Release|Win32.ActiveCfg = Release|Win32
-		{ECF49F95-8231-355D-8FEC-816AFC8B09BB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

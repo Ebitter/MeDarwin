@@ -3,6 +3,7 @@
 ######################################################################
 BASE_PATH =$$PWD/../
 
+QT -= core gui
 TEMPLATE = app
 TARGET = streamserver
 INCLUDEPATH += .
